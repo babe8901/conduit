@@ -8,10 +8,40 @@ import { CreateUserDto, LoginUserDto, UpdateUserDto } from './dto';
 import { User } from './user.entity';
 import { IUserRO } from './user.interface';
 import { UserRepository } from './user.repository';
+import { UserStatsDto } from './dto/user-stats.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository, private readonly em: EntityManager) {}
+
+  async getUserStats() {
+    const qb = this.userRepository.createQueryBuilder('u');    
+    qb.select([
+      'u.id',
+      'u.username',
+      'u.bio',
+      'u.image',
+      'COUNT(a.id) as totalArticles',
+      'SUM(a.favorites_count) as totalFavorites',
+      'MIN(a.created_at) as firstArticleDate'
+    ])
+    .leftJoin('u.articles', 'a')
+    .groupBy('u.id');
+    
+    const results: UserStatsDto[] = await qb.execute();
+
+    const transformedResults: UserStatsDto[] = results.map(result => ({
+      id: result.id,
+      username: result.username,
+      bio: result.bio,
+      image: result.image,
+      totalArticles: result.totalArticles,
+      totalFavorites: result.totalFavorites,
+      firstArticleDate: result.firstArticleDate,
+    }));
+
+    return transformedResults.sort((a, b) => b.totalFavorites - a.totalFavorites);
+  }
 
   async findAll(): Promise<User[]> {
     return this.userRepository.findAll();

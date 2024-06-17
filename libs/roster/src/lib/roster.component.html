@@ -1,1 +1,22 @@
-<p>TODO</p>
+<div class="roster">
+  <h4>Conduit Roster</h4>
+  <table *ngIf="userStats$ | async as userStats">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Total Articles</th>
+        <th>Total Favorites</th>
+        <th>First Article Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of userStats">
+        <td><a [routerLink]="['/profile', user.username]">{{ user.username }}</a></td>
+        <td>{{ user.totalArticles || 0 }}</td>
+        <td>{{ user.totalFavorites || 0}}</td>
+        <td>{{ user.firstArticleDate | date }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="!(userStats$ | async)">Loading...</div>
+</div>
